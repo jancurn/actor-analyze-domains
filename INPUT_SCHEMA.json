@@ -80,7 +80,7 @@
             "description": "If checked, the actor stores screenshots of all loaded pages into the key-value store.",
             "default": true
         },
-        "saveHtmlDocument": {
+        "saveHtmlContent": {
             "title": "Save HTML content",
             "type": "boolean",
             "description": "If checked, the actor stores HTML content of all loaded pages into the key-value store.",

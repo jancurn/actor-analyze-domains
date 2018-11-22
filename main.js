@@ -91,7 +91,7 @@ const processPage = async ({ input, url, page, domain, response, index }) => {
 
     // Save HTML content
     let htmlDocument;
-    if (input.saveHtmlDocument) {
+    if (input.saveHtmlContent) {
         const contentKey = `content-${domain}-${indexStr}.html`;
         await Apify.setValue(contentKey, html, { contentType: 'text/html; charset=utf-8' });
         htmlDocument = {
