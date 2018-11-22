@@ -10,10 +10,10 @@ const parsers = require('./parsers');
 const DEFAULT_RETRY_COUNT = 1;
 
 // TODOs:
-// - finish README !!!
 // - support also passing list of URLs, not just domains,
 //   automatically detect that (don't add www and https in that case)
 // - move the parsing functions to SDK, write tests for them!
+// - better unique pages handling and retry logic for sub-links
 
 
 /**
@@ -207,9 +207,15 @@ Apify.main(async () => {
 
     // Download list of domains in form "example.com"
     // and create a RequestList with URLs in form "http://example.com"
-    const domainsFromFile = input.domainsFileUrl
-        ? await Apify.utils.downloadListOfUrls({ url: input.domainsFileUrl, urlRegExp: DOMAIN_REGEX })
-        : [];
+    let domainsFromFile;
+    try {
+        domainsFromFile = input.domainsFileUrl
+            ? await Apify.utils.downloadListOfUrls({ url: input.domainsFileUrl, urlRegExp: DOMAIN_REGEX })
+            : [];
+    } catch (e) {
+        console.error(`Error downloading the file with the list of domains from ${input.domainsFileUrl}`);
+        throw e;
+    }
 
     const domainsFromInput = input.domains
         ? await Apify.utils.extractUrls({ string: input.domains, urlRegExp: DOMAIN_REGEX })
