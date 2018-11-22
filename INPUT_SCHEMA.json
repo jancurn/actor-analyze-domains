@@ -6,7 +6,7 @@
         "domains": {
             "title": "Domains",
             "type": "string",
-            "description": "List of domains to crawl. The domains must be specified without a protocol and sub-domains (e.g. <code>example.com</code>). This field is useful for testing smaller sample sizes.",
+            "description": "List of domains to crawl. The domains must be naked, i.e. specified without a protocol and sub-domains (e.g. <code>example.com</code>).",
             "prefill": "example.com\napify.com\niana.org",
             "default": "",
             "editor": "textarea"
@@ -14,7 +14,7 @@
         "domainsFileUrl": {
             "title": "Domains file URL",
             "type": "string",
-            "description": "URL of the text file that contains the list of domains to crawl. The domains must be specified without a protocol and sub-domains (e.g. <code>example.com</code>)",
+            "description": "URL of the text file that contains the list of domains to crawl. The domains must be naked, i.e. specified without a protocol and sub-domains (e.g. <code>example.com</code>).<br><br>This field is useful if you have a large number of domains.",
             "prefill": "https://www.example.com/domains.txt",
             "editor": "textfield"
         },
