@@ -1,0 +1,99 @@
+{
+    "title": "Schema for batch-cancel-accounts actor",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+        "domains": {
+            "title": "Domains",
+            "type": "string",
+            "description": "List of domains to crawl. The domains must be specified without a protocol and sub-domains (e.g. <code>example.com</code>). This field is useful for testing smaller sample sizes.",
+            "prefill": "example.com\napify.com\niana.org",
+            "default": "",
+            "editor": "textarea"
+        },
+        "domainsFileUrl": {
+            "title": "Domains file URL",
+            "type": "string",
+            "description": "URL of the text file that contains the list of domains to crawl. The domains must be specified without a protocol and sub-domains (e.g. <code>example.com</code>)",
+            "prefill": "https://www.example.com/domains.txt",
+            "editor": "textfield"
+        },
+        "domainsFileOffset": {
+            "title": "Domains offset",
+            "type": "integer",
+            "description": "Indicates how many domains from the beginning of the list of domains should be skipped. This is useful if you only want to crawl a portion of the domains.",
+            "default": 0,
+            "minimum": 0,
+            "maximum": 999999999
+        },
+        "domainsFileCount": {
+            "title": "Domains count",
+            "type": "integer",
+            "description": "Indicates how many domains should be crawled, starting from the offset. This is useful if you only want to crawl a portion of the domains. Leave empty to crawl all domains.",
+            "minimum": 0,
+            "maximum": 999999999
+        },
+        "useChrome": {
+            "title": "Use Chrome",
+            "type": "boolean",
+            "description": "If checked, the actor uses Chrome instead of Puppeteer's Chromium for the crawling. This might help to prevent blocking of some pages.",
+            "default": false
+        },
+        "useApifyProxy": {
+            "title": "Use Apify Proxy",
+            "type": "boolean",
+            "description": "If checked, the actor uses Apify Proxy to access the target pages. This might help to prevent blocking of some pages.",
+            "default": false
+        },
+        "maxRequestRetries": {
+            "title": "Max page retries",
+            "type": "integer",
+            "description": "Indicates how many times shall the crawl retry to load a page on error.",
+            "prefill": 2,
+            "default": 0,
+            "minimum": 0,
+            "maximum": 5
+        },
+        "crawlLinkCount": {
+            "title": "Crawl sublinks",
+            "type": "integer",
+            "description": "Indicates how many links from the main page going to the same domain shall also be crawled.",
+            "default": 5,
+            "minimum": 0,
+            "maximum": 100
+        },
+        "crawlHttpsVersion": {
+            "title": "Crawl HTTPS version",
+            "type": "boolean",
+            "description": "If checked, the actor attempts to crawl HTTPs version of the website (e.g. <code>https://example.com</code> for domain <code>example.com</code>).",
+            "default": true
+        },
+        "crawlWwwSubdomain": {
+            "title": "Crawl www sub-domains",
+            "type": "boolean",
+            "description": "If checked, the actor attempts to crawl www sub-domain of the website (e.g. <code>http://www.example.com</code> for domain <code>example.com</code>).",
+            "default": true
+        },
+        "saveScreenshot": {
+            "title": "Save screenshots",
+            "type": "boolean",
+            "description": "If checked, the actor stores screenshots of all loaded pages into the key-value store.",
+            "default": true
+        },
+        "saveHtmlDocument": {
+            "title": "Save HTML content",
+            "type": "boolean",
+            "description": "If checked, the actor stores HTML content of all loaded pages into the key-value store.",
+            "default": true
+        },
+        "saveText": {
+            "title": "Save text content",
+            "type": "boolean",
+            "description": "If checked, the actor stores text content of all loaded pages into the dataset results.",
+            "default": true
+        }
+    },
+    "required": [
+        "domainsFileUrl"
+    ]
+}
