@@ -7,7 +7,7 @@
             "title": "Domains",
             "type": "string",
             "description": "List of domains to crawl. The domains must be naked, i.e. specified without a protocol and sub-domains (e.g. <code>example.com</code>).",
-            "prefill": "example.com\napify.com\niana.org",
+            "prefill": "example.com\niana.org\napify.com",
             "default": "",
             "editor": "textarea"
         },
@@ -25,7 +25,7 @@
             "default": 0,
             "minimum": 0,
             "maximum": 999999999
-        },
+        },domainsFileUrl
         "domainsFileCount": {
             "title": "Domains count",
             "type": "integer",
@@ -93,7 +93,5 @@
             "default": true
         }
     },
-    "required": [
-        "domainsFileUrl"
-    ]
+    "required": []
 }
