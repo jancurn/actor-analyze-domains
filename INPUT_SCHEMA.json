@@ -69,9 +69,9 @@
             "default": true
         },
         "crawlWwwSubdomain": {
-            "title": "Crawl www sub-domains",
+            "title": "Crawl www. sub-domain",
             "type": "boolean",
-            "description": "If checked, the actor attempts to crawl www sub-domain of the website (e.g. <code>http://www.example.com</code> for domain <code>example.com</code>).",
+            "description": "If checked, the actor attempts to crawl <code>www.</code> sub-domain of the website (e.g. <code>http://www.example.com</code> for domain <code>example.com</code>).",
             "default": true
         },
         "saveScreenshot": {
