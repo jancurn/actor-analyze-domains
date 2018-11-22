@@ -25,7 +25,7 @@
             "default": 0,
             "minimum": 0,
             "maximum": 999999999
-        },domainsFileUrl
+        },
         "domainsFileCount": {
             "title": "Domains count",
             "type": "integer",
