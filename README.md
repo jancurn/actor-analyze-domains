@@ -13,7 +13,7 @@ the crawler tries to open `crawlLinkCount` pages linked from the main page and a
 For each web page visited, the crawler extracts and saves the following information:
 
 - Page screenshot format (if `saveScreenshot` setting is `true`). The screenshots are stored in JPEG format to save disk space.
-  Note that taking screenshots is quite resource intensive and will slowdown your crawler.
+  Note that taking screenshots is quite resource intensive and will slow your crawler down.
 - HTML content (if `saveHtmlContent` setting is `true`)
 - Text body of the page (if `saveText` setting is `true`)
 - HTTP response headers
@@ -24,11 +24,11 @@ For each web page visited, the crawler extracts and saves the following informat
   - List of email addresses
   - List of phone numbers
 
-The results of the crawler are stored into the dataset - for each web page crawled
-there will be one record. The optional screenshots and HTML content of pages is stored
-into separate record in the key-value store.
+The results of the crawler are stored into a dataset - for each web page crawled
+there will be one record. The optional screenshots and HTML content of web pages is stored
+into separate records in the key-value store.
 
-For example, for the web page `https://example.com` the resulting record looks like this:
+For example, for the web page `https://example.com` the resulting record in the dataset looks as follows:
 
 ```
 {
