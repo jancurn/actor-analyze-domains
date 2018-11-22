@@ -15,7 +15,6 @@
             "title": "Domains file URL",
             "type": "string",
             "description": "URL of a text file that contains the list of domains to crawl. The domains must be naked, i.e. specified without a protocol and sub-domains (e.g. <code>example.com</code>).<br><br>This field is useful if you have a large number of domains.",
-            "prefill": null,
             "editor": "textfield"
         },
         "domainsFileOffset": {
