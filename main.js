@@ -2,18 +2,15 @@ const { URL } = require('url');
 const _ = require('underscore');
 const Apify = require('apify');
 const utils = require('apify-shared/utilities');
-const htmlToText = require('html-to-text');
-// var html2plaintext = require('html2plaintext')
-const parsers = require('./parsers');
 
 
 const DEFAULT_RETRY_COUNT = 1;
 
 // TODOs:
-// - support also passing list of URLs, not just domains,
-//   automatically detect that (don't add www and https in that case)
-// - move the parsing functions to SDK, write tests for them!
-// - better unique pages handling and retry logic for sub-links
+// - Better unique pages handling and retry logic for sub-links (restart browser!)
+// - Prefer also sublinks that contain "Contact" in text, and then randomize the other links
+//   to have a better chance of finding something
+// - Add validation of input - if invalid string is passed (e.g. URL), then throw an error !
 
 
 /**
@@ -91,7 +88,7 @@ const processPage = async ({ input, url, page, domain, response, index }) => {
 
     // Save HTML content
     let htmlDocument;
-    if (input.saveHtmlContent) {
+    if (input.saveHtml) {
         const contentKey = `content-${domain}-${indexStr}.html`;
         await Apify.setValue(contentKey, html, { contentType: 'text/html; charset=utf-8' });
         htmlDocument = {
@@ -100,48 +97,26 @@ const processPage = async ({ input, url, page, domain, response, index }) => {
         };
     }
 
-    /*let unfluffData;
+    let socialHandles = null;
+    let parseData = {};
     try {
-        unfluffData = unfluff(html);
+        socialHandles = Apify.utils.social.parseHandlesFromHtml(html, parseData);
     } catch (e) {
-        console.error(`Error generating unfluff data for ${url}: ${e.stack || e}`);
-        unfluffData = {
-            errorMessage: `${e}`,
-        }
-    }*/
-
-    let text;
-    try {
-        text = htmlToText.fromString(html, { ignoreHref: true, ignoreImage: true });
-    } catch (e) {
-        console.error(`Error converting HTML to text for ${url}: ${e.stack || e}`);
-        text = '';
+        console.error(`Error parsing social handles from HTML for ${url}: ${e.stack || e}`);
+        if (!parseData.text) parseData.text = `Error occurred while parsing the HTML: ${e.stack || e}`;
     }
 
     // Find all links
+    // NOTE: We're using Puppeteer instead of Cheerio parsed data, since href is made absolute here!
     let linkUrls = await page.$$eval('a', (linkEls) => {
         return linkEls.map(link => link.href).filter(href => !!href);
     });
     linkUrls = linkUrls.map(normalizeUrl);
     linkUrls.sort();
 
-    // Extract phone numbers and emails, sort them and remove duplicates
-    let phones = parsers.extractPhonesFromUrls(linkUrls);
-    let emails = parsers.extractEmailsFromUrls(linkUrls);
-    if (text) {
-        phones = phones.concat(parsers.extractPhonesFromText(text));
-        emails = emails.concat(parsers.extractEmailsFromText(text));
-    }
-    phones.sort();
-    phones = _.uniq(phones, true);
-    emails.sort();
-    emails = _.uniq(emails, true);
-
-    let pageData = {
+    const pageData = {
         title: await page.title(),
         linkUrls: _.uniq(linkUrls, true),
-        phones,
-        emails,
     };
 
     const securityDetailsRaw = response.securityDetails();
@@ -163,10 +138,11 @@ const processPage = async ({ input, url, page, domain, response, index }) => {
             headers: response.headers(),
             securityDetails,
         },
-        pageData,
+        page: pageData,
+        social: socialHandles,
         screenshot,
-        htmlDocument,
-        text: input.saveText ? text : undefined,
+        html: htmlDocument,
+        text: input.saveText ? parseData.text : undefined,
     };
 };
 
@@ -186,7 +162,6 @@ const loadAndProcessPage = async ({ input, url, page, domain, index }) => {
     }
 
     // Request failed
-    // TODO: Maybe restart the browser, just in case
     return {
         domain,
         url,
@@ -194,8 +169,7 @@ const loadAndProcessPage = async ({ input, url, page, domain, index }) => {
     }
 };
 
-const DOMAIN_REGEX = /([a-z0-9]|[a-z0-9][a-z0-9-]*[a-z0-9])\.[a-z]{2,30}(\.[a-z0-9]{2,30})?/gi;
-
+const DOMAIN_REGEX = /([a-z0-9]|[a-z0-9][a-z0-9\-]*[a-z0-9])\.[a-z]{2,30}(\.[a-z0-9]{2,30})?/gi;
 
 Apify.main(async () => {
     const input = await Apify.getValue('INPUT');
@@ -216,6 +190,9 @@ Apify.main(async () => {
         console.error(`Error downloading the file with the list of domains from ${input.domainsFileUrl}`);
         throw e;
     }
+    const offset = input.domainsFileOffset || 0;
+    const count = input.domainsFileCount;
+    domainsFromFile = domainsFromFile.slice(offset, count ? offset + count : undefined);
 
     const domainsFromInput = input.domains
         ? await Apify.utils.extractUrls({ string: input.domains, urlRegExp: DOMAIN_REGEX })
@@ -223,15 +200,9 @@ Apify.main(async () => {
 
     const allDomains = domainsFromInput.concat(domainsFromFile);
     if (allDomains.length === 0) throw new Error('Invalid INPUT: Neither "domains" nor file at "domainsFileUrl" contains any domains to crawl!');
-    console.log(`Total domains: ${allDomains.length}`);
+    console.log(`Number of input domains: ${allDomains.length}`);
 
-    const offset = input.domainsFileOffset || 0;
-    const count = input.domainsFileCount;
-    let domains = allDomains.slice(offset, count ? offset + count : undefined);
-
-    console.log(`Domains to crawl: ${domains.length}`);
-
-    const sources =_.map(domains, (domain) => {
+    const sources =_.map(allDomains, (domain) => {
         domain = domain.toLowerCase();
         return {
             url: `http://${domain}`,
@@ -243,6 +214,7 @@ Apify.main(async () => {
         persistStateKey: 'CRAWLER-STATE'
     });
     await requestList.initialize();
+    console.log(`Number of unique domains: ${requestList.length()}`);
 
 
     // Start crawling
@@ -280,7 +252,7 @@ Apify.main(async () => {
             if (input.crawlHttpsVersion && input.crawlWwwSubdomain) crawlUrls.push(`https://www.${domain}`);
 
             if (input.crawlLinkCount > 0) {
-                const domainUrls = filterDomainUrls(results[0].pageData.linkUrls, domain, crawlUrls);
+                const domainUrls = filterDomainUrls(results[0].page.linkUrls, domain, crawlUrls);
 
                 // Sort the URLs in a way that URLs containing '/contact' text will get to front positions.
                 // This is a heuristic to ensure we visit contact us pages if available
