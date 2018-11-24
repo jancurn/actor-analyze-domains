@@ -18,17 +18,17 @@
             "editor": "textfield"
         },
         "domainsFileOffset": {
-            "title": "Domains offset",
+            "title": "Domains file offset",
             "type": "integer",
-            "description": "Indicates how many domains from the beginning of the list of domains should be skipped. This is useful if you only want to crawl a portion of the domains.",
+            "description": "Indicates how many domains from the file should be skipped in the beginning. This is useful if you only want to crawl a portion of the domains.",
             "default": 0,
             "minimum": 0,
             "maximum": 999999999
         },
         "domainsFileCount": {
-            "title": "Domains count",
+            "title": "Domains file count",
             "type": "integer",
-            "description": "Indicates how many domains should be crawled, starting from the offset. This is useful if you only want to crawl a portion of the domains. Leave empty to crawl all domains.",
+            "description": "Indicates how many domains from the file should be crawled, starting from the offset. This is useful if you only want to crawl a portion of the domains. Leave empty to crawl all domains.",
             "minimum": 0,
             "maximum": 999999999
         },
@@ -47,14 +47,14 @@
         "maxRequestRetries": {
             "title": "Max page retries",
             "type": "integer",
-            "description": "Indicates how many times shall the crawl retry to load a page on error.",
+            "description": "Indicates how many times shall the crawler retry to load a page on error.",
             "prefill": 2,
             "default": 0,
             "minimum": 0,
             "maximum": 5
         },
         "crawlLinkCount": {
-            "title": "Crawl sublinks",
+            "title": "Crawl domain links",
             "type": "integer",
             "description": "Indicates how many links from the main page going to the same domain shall also be crawled.",
             "prefill": 5,
