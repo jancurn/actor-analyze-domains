@@ -11,6 +11,7 @@ const DEFAULT_RETRY_COUNT = 1;
 // - Prefer also sublinks that contain "Contact" in text, and then randomize the other links
 //   to have a better chance of finding something
 // - Add validation of input - if invalid string is passed (e.g. URL), then throw an error !
+// - Improve extraction of text, the current way removes spaces between words where they should be kept
 
 
 /**
