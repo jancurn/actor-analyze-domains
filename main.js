@@ -226,13 +226,12 @@ Apify.main(async () => {
         // Use new browser for every domain
         retireInstanceAfterRequestCount: 1,
 
-        useChrome: !!input.useChrome,
-        useApifyProxy: !!input.useApifyProxy,
-        apifyProxySession: Math.random(),
-
-        launchPuppeteerFunction: async () => Apify.launchPuppeteer({
+        launchPuppeteerOptions: {
             defaultViewport: { width: 900, height: 800 },
-        }),
+            useChrome: !!input.useChrome,
+            useApifyProxy: !!input.useApifyProxy,
+            apifyProxySession: Math.random(),
+        },
 
         // For each domain, crawl one or more pages from that domain using the single Puppeteer Page instance.
         // This is to avoid the need to use RequestQueue, since we want to run this on a very large number of domains
