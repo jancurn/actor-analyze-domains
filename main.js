@@ -115,10 +115,66 @@ const processPage = async ({ input, url, page, domain, response, index }) => {
     linkUrls = linkUrls.map(normalizeUrl);
     linkUrls.sort();
 
+    // Extract phones from links separately, they are high-certainty
+    if (socialHandles) {
+        socialHandles.phonesFromLinks = Apify.utils.social.phonesFromUrls(linkUrls);
+    }
+
     const pageData = {
         title: await page.title(),
         linkUrls: _.uniq(linkUrls, true),
     };
+
+
+    /*
+    // Extract tree of frames
+    const dumpFrameTree = async (frame, parentRec) => {
+        const rec = {
+            url: frame.url(),
+            name: frame.name(),
+            title: await frame.title(),
+            childFrames: [],
+        };
+        for (let childFrame of frame.childFrames()) {
+            await dumpFrameTree(childFrame, rec);
+        }
+        if (parentRec) {
+            parentRec.childFrames.push(rec);
+        }
+        return rec;
+    };
+    pageData.mainFrame = await dumpFrameTree(page.mainFrame(), null);
+    */
+
+    // Search also child FRAMEs to find social handles
+    if (input.considerChildFrames) {
+        for (let childFrame of page.mainFrame().childFrames()) {
+            const html = await childFrame.content();
+            let childSocialHandles = null;
+            let childParseData = {};
+            try {
+                childSocialHandles = Apify.utils.social.parseHandlesFromHtml(html, childParseData);
+
+                // Extract phones from links separately, they are high-certainty
+                const childLinkUrls = await childFrame.$$eval('a', (linkEls) => {
+                    return linkEls.map(link => link.href).filter(href => !!href);
+                });
+                childSocialHandles.phonesFromLinks = Apify.utils.social.phonesFromUrls(childLinkUrls);
+
+                ['emails', 'phones', 'phonesFromLinks', 'linkedIns', 'twitters', 'instagrams', 'facebooks'].forEach((field) => {
+                    socialHandles[field] = socialHandles[field].concat(childSocialHandles[field]);
+                });
+            } catch (e) {
+                console.error(`Error parsing social handles from HTML for ${url}: ${e.stack || e}`);
+                if (!childParseData.text) childParseData.text = `Error occurred while parsing the HTML: ${e.stack || e}`;
+            }
+            parseData.text += `\n\n${childParseData.text}`;
+        }
+
+        ['emails', 'phones', 'phonesFromLinks', 'linkedIns', 'twitters', 'instagrams', 'facebooks'].forEach((field) => {
+            socialHandles[field] = _.uniq(socialHandles[field]);
+        });
+    }
 
     const securityDetailsRaw = response.securityDetails();
     const securityDetails = !securityDetailsRaw ? null : {

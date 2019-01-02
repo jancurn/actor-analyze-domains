@@ -91,6 +91,12 @@
             "type": "boolean",
             "description": "If checked, the actor stores text content of all loaded pages into the dataset results.",
             "default": true
+        },
+        "considerChildFrames": {
+            "title": "Consider child frames",
+            "type": "boolean",
+            "description": "If checked, the actor searches for social handles even in the content of the first-level child frames. The 'page.text' also contains the combined text of the main frame and direct child frames.",
+            "default": false
         }
     },
     "required": []
