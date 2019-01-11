@@ -75,7 +75,7 @@ const processPage = async ({ input, url, page, domain, response, index }) => {
         const buffer = await page.screenshot({
             type: 'jpeg',
             quality: 60,
-            fullPage: true
+            fullPage: true,
         });
         const screenshotKey = `screenshot-${domain}-${indexStr}.jpg`;
         await Apify.setValue(screenshotKey, buffer, { contentType: 'image/jpeg' });
@@ -107,11 +107,26 @@ const processPage = async ({ input, url, page, domain, response, index }) => {
         if (!parseData.text) parseData.text = `Error occurred while parsing the HTML: ${e.stack || e}`;
     }
 
-    // Find all links
+    // Find all links (skip "javascript:" links)
     // NOTE: We're using Puppeteer instead of Cheerio parsed data, since href is made absolute here!
     let linkUrls = await page.$$eval('a', (linkEls) => {
-        return linkEls.map(link => link.href).filter(href => !!href);
+        return linkEls.map(link => link.href).filter(href => !!href && !/^javascript:/i.test(href));
     });
+    // If the page contains something like <meta http-equiv="refresh" content="15;url=xxx.html">,
+    // then add the target to the list of links too.
+    let metaRefreshUrls = await page.$$eval('head meta[http-equiv=refresh]', (metas) => {
+        const urls = [];
+        metas.map(meta => meta.getAttribute('content')).filter(content => !!content).forEach((content) => {
+            const matches = /^\s*[0-9]+\s*;\s*url\s*=\s*(.*)$/i.exec(content);
+            if (matches) {
+                const url = matches[1];
+                urls.push(new URL(url, window.location.href).toString());
+            }
+        });
+        return urls;
+    });
+    metaRefreshUrls.forEach((url) => linkUrls.push(url));
+
     linkUrls = linkUrls.map(normalizeUrl);
     linkUrls.sort();
 
@@ -120,9 +135,27 @@ const processPage = async ({ input, url, page, domain, response, index }) => {
         socialHandles.phonesFromLinks = Apify.utils.social.phonesFromUrls(linkUrls);
     }
 
+    // Extract JSON-LD Linked Data
+    // $('script[type="application/ld+json"]');
+    let linkedDataObjects = await page.$$eval('script[type="application/ld+json"]', (elems) => {
+        const objs = [];
+        elems.forEach((elem) => {
+            try {
+                objs.push(JSON.parse(elem.text));
+            } catch (e) {}
+        });
+        return objs;
+    });
+
+    // Get phone numbers from JSON+LD data
+    linkedDataObjects.forEach((obj) => {
+        if (obj && obj.telephone) socialHandles.phonesFromLinks.push(obj.telephone);
+    });
+
     const pageData = {
         title: await page.title(),
         linkUrls: _.uniq(linkUrls, true),
+        linkedDataObjects,
     };
 
 
@@ -203,7 +236,8 @@ const processPage = async ({ input, url, page, domain, response, index }) => {
     };
 };
 
-const loadAndProcessPage = async ({ input, url, page, domain, index }) => {
+const loadAndProcessPage = async (state) => {
+    const { input, url, page, domain, index, puppeteerPool } = state;
     const retryCount = input.maxRequestRetries || DEFAULT_RETRY_COUNT;
     let lastError;
 
@@ -215,6 +249,10 @@ const loadAndProcessPage = async ({ input, url, page, domain, index }) => {
             return await processPage({ input, url, page, domain, response, index });
         } catch (e) {
             lastError = e;
+
+            // The original page might be in invalid state, so just try to open new one
+            state.page = await puppeteerPool.newPage();
+            await page.close().catch(() => {});
         }
     }
 
@@ -293,7 +331,7 @@ Apify.main(async () => {
         // This is to avoid the need to use RequestQueue, since we want to run this on a very large number of domains
         // and RequestQueue would contain too many items.
         // For each domain, we only crawl a few pages, so it's okay that on restarts we'll need to re-crawl these few pages.
-        handlePageFunction: async ({ page, request, response }) => {
+        handlePageFunction: async ({ page, request, response, puppeteerPool }) => {
             const domain = request.userData.domain;
             let index = 0;
 
@@ -330,8 +368,11 @@ Apify.main(async () => {
             }
 
             // Crawl the additional URLs
+            const state = { input, page, domain, puppeteerPool };
             for (let url of crawlUrls) {
-                results.push(await loadAndProcessPage({ url, input, page, domain, index: index++ }))
+                state.index = index++;
+                state.url = url;
+                results.push(await loadAndProcessPage(state))
             }
 
             // Push results from all pages together, so they are close to each other

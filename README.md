@@ -5,6 +5,7 @@ For each web page visited, the crawler extracts and saves the following informat
 - Page data:
   - Page title
   - List of all links
+  - [JSON+LD](https://en.wikipedia.org/wiki/JSON-LD) linked data
 - Social handles
   - Emails
   - Phone numbers
@@ -67,7 +68,8 @@ For example, for the web page `https://example.com` the resulting record in the 
     "title": "Example Domain",
     "linkUrls": [
       "http://www.iana.org/domains/example"
-    ]
+    ],
+    "linkedDataObjects": []
   },
   "social": {
     "emails": [],
