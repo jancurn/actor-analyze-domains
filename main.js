@@ -2,6 +2,7 @@ const { URL } = require('url');
 const _ = require('underscore');
 const Apify = require('apify');
 const utils = require('apify-shared/utilities');
+const contentTypeMod = require('content-type');
 
 
 const DEFAULT_RETRY_COUNT = 1;
@@ -33,6 +34,8 @@ const normalizeUrl = (url) => {
 /**
  * Take a list of URLs are removes URLs going to non-HTTP(S) protocols or going to another domain.
  * @param linkUrls
+ * @param domain
+ * @param omitUrls Normalized URLs that will be skipped
  * @return {Array}
  */
 const filterDomainUrls = (linkUrls, domain, omitUrls) => {
@@ -55,7 +58,12 @@ const filterDomainUrls = (linkUrls, domain, omitUrls) => {
         if (hostname !== domain && !hostname.endsWith(`.${domain}`)) return;
 
         // Skip URLs in omitUrls list
-        if (omitUrls && omitUrls.indexOf(linkUrl) >= 0) return;
+        if (omitUrls) {
+            const normalizedUrl = normalizeUrl(linkUrl);
+            for (const omitUrl of omitUrls) {
+                if (omitUrl === normalizedUrl) return;
+            }
+        }
 
         result.push(linkUrl);
     });
@@ -68,6 +76,16 @@ const processPage = async ({ input, url, page, domain, response, index }) => {
     console.log(`Processing page: ${url}`);
 
     const indexStr = `${index}`.padStart(2, '0');
+
+    const headers = response.headers() || {};
+    const contentType = headers['content-type'];
+    if (contentType && contentTypeMod.parse(contentType).type !== 'text/html') {
+        return {
+            domain,
+            url,
+            errorMessage: `The document has unsupported Content-Type: "${contentType}"`,
+        };
+    }
 
     // Save screenshot, using low-quality JPEG to save space
     let screenshot;
@@ -240,6 +258,7 @@ const loadAndProcessPage = async (state) => {
             console.log(`Loading page: ${url}`);
 
             const response = await page.goto(url);
+
             return await processPage({ input, url, page, domain, response, index });
         } catch (e) {
             lastError = e;
@@ -339,8 +358,10 @@ Apify.main(async () => {
             if (input.crawlWwwSubdomain) crawlUrls.push(`http://www.${domain}`);
             if (input.crawlHttpsVersion && input.crawlWwwSubdomain) crawlUrls.push(`https://www.${domain}`);
 
+            const omitUrls = [request.url, ...crawlUrls];
+
             if (input.crawlLinkCount > 0) {
-                const domainUrls = filterDomainUrls(results[0].page.linkUrls, domain, crawlUrls);
+                const domainUrls = filterDomainUrls(results[0].page.linkUrls, domain, omitUrls);
 
                 // Sort the URLs in a way that URLs containing '/contact' text will get to front positions.
                 // This is a heuristic to ensure we visit contact us pages if available
