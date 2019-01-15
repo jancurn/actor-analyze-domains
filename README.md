@@ -74,6 +74,7 @@ For example, for the web page `https://example.com` the resulting record in the 
   "social": {
     "emails": [],
     "phones": [],
+    "phonesUncertain": [],
     "linkedIns": [],
     "twitters": [],
     "instagrams": [],

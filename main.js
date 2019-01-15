@@ -130,11 +130,6 @@ const processPage = async ({ input, url, page, domain, response, index }) => {
     linkUrls = linkUrls.map(normalizeUrl);
     linkUrls.sort();
 
-    // Extract phones from links separately, they are high-certainty
-    if (socialHandles) {
-        socialHandles.phonesFromLinks = Apify.utils.social.phonesFromUrls(linkUrls);
-    }
-
     // Extract JSON-LD Linked Data
     // $('script[type="application/ld+json"]');
     let linkedDataObjects = await page.$$eval('script[type="application/ld+json"]', (elems) => {
@@ -149,7 +144,7 @@ const processPage = async ({ input, url, page, domain, response, index }) => {
 
     // Get phone numbers from JSON+LD data
     linkedDataObjects.forEach((obj) => {
-        if (obj && obj.telephone) socialHandles.phonesFromLinks.push(obj.telephone);
+        if (obj && obj.telephone) socialHandles.phones.push(obj.telephone);
     });
 
     const pageData = {
@@ -192,9 +187,8 @@ const processPage = async ({ input, url, page, domain, response, index }) => {
                 const childLinkUrls = await childFrame.$$eval('a', (linkEls) => {
                     return linkEls.map(link => link.href).filter(href => !!href);
                 });
-                childSocialHandles.phonesFromLinks = Apify.utils.social.phonesFromUrls(childLinkUrls);
 
-                ['emails', 'phones', 'phonesFromLinks', 'linkedIns', 'twitters', 'instagrams', 'facebooks'].forEach((field) => {
+                ['emails', 'phones', 'phonesUncertain', 'linkedIns', 'twitters', 'instagrams', 'facebooks'].forEach((field) => {
                     socialHandles[field] = socialHandles[field].concat(childSocialHandles[field]);
                 });
             } catch (e) {
@@ -204,7 +198,7 @@ const processPage = async ({ input, url, page, domain, response, index }) => {
             parseData.text += `\n\n${childParseData.text}`;
         }
 
-        ['emails', 'phones', 'phonesFromLinks', 'linkedIns', 'twitters', 'instagrams', 'facebooks'].forEach((field) => {
+        ['emails', 'phones', 'phonesUncertain', 'linkedIns', 'twitters', 'instagrams', 'facebooks'].forEach((field) => {
             socialHandles[field] = _.uniq(socialHandles[field]);
         });
     }
