@@ -249,7 +249,7 @@ const processPage = async ({ input, url, page, domain, response, index }) => {
 };
 
 const loadAndProcessPage = async (state) => {
-    const { input, url, page, domain, index, puppeteerPool } = state;
+    const { input, url, domain, index, puppeteerPool } = state;
     const retryCount = input.maxRequestRetries || DEFAULT_RETRY_COUNT;
     let lastError;
 
@@ -257,15 +257,16 @@ const loadAndProcessPage = async (state) => {
         try {
             console.log(`Loading page: ${url}`);
 
-            const response = await page.goto(url);
+            const response = await state.page.goto(url);
 
-            return await processPage({ input, url, page, domain, response, index });
+            return await processPage({ input, url, page: state.page, domain, response, index });
         } catch (e) {
             lastError = e;
 
-            // The original page might be in invalid state, so just try to open new one
+            // The original page might be in invalid state, so just try to open a new one
+            const prevPage = state.page;
             state.page = await puppeteerPool.newPage();
-            await page.close().catch(() => {});
+            await prevPage.close().catch(() => {});
         }
     }
 
