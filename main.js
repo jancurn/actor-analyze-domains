@@ -161,8 +161,18 @@ const processPage = async ({ input, url, page, domain, response, index }) => {
     });
 
     // Get phone numbers from JSON+LD data
+    // TODO: This should probably go to parseHandlesFromHtml()
+    // telephone should be checked against our regexpes
     linkedDataObjects.forEach((obj) => {
-        if (obj && obj.telephone) socialHandles.phones.push(obj.telephone);
+        if (obj && obj.telephone) {
+            if (typeof obj.telephone === 'string') {
+                socialHandles.phones.push(obj.telephone);
+            } else if (Array.isArray(obj.telephone)) {
+                obj.telephone.forEach((telephone) => {
+                    if (telephone && typeof telephone === 'string') socialHandles.phones.push(telephone);
+                })
+            }
+        }
     });
 
     const pageData = {
