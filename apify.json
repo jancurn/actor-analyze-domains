@@ -1,5 +1,5 @@
 {
-	"name": "jancurn/analyse-domains",
+	"name": "jancurn/analyze-domains",
 	"template": "puppeteer_crawler",
 	"version": "0.1",
 	"buildTag": "latest",

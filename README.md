@@ -28,7 +28,7 @@ For each domain (e.g. `example.com`) from the input, the actor tries to load the
 - `https://www.example.com` (only if both `crawlHttpsVersion` and `crawlWwwSubdomain` settings are `true`)
 
 Additionally, if the `crawlLinkCount` setting is greater than zero, for each domain
-the crawler tries to open `crawlLinkCount` pages linked from the main page and analyse them too.
+the crawler tries to open `crawlLinkCount` pages linked from the main page and analyze them too.
 The crawler prefers the links that contains the `/contact` text, to increase the chance it will find
 more emails, phone numbers and other social handles.
 
@@ -98,6 +98,6 @@ If the web page cannot be loaded for any reason, the record contains the informa
 {
   "domain": "non-existent-domain.net",
   "url": "http://non-existent-domain.net",
-  "errorMessage": "Error: net::ERR_NAME_NOT_RESOLVED at http://non-existent-domain.net\n    at navigate (/Users/jan/Projects/actor-analyse-domains/node_modules/puppeteer/lib/FrameManager.js:103:37)\n    at <anonymous>\n    at process._tickCallback (internal/process/next_tick.js:189:7)\n  -- ASYNC --\n    at Frame.<anonymous> (/Users/jan/Projects/actor-analyse-domains/node_modules/puppeteer/lib/helper.js:144:27)\n    at Page.goto (/Users/jan/Projects/actor-analyse-domains/node_modules/puppeteer/lib/Page.js:587:49)\n    at Page.<anonymous> (/Users/jan/Projects/actor-analyse-domains/node_modules/puppeteer/lib/helper.js:145:23)\n    at PuppeteerCrawler.gotoFunction (/Users/jan/Projects/actor-analyse-domains/node_modules/apify/build/puppeteer_crawler.js:30:53)\n    at PuppeteerCrawler._handleRequestFunction (/Users/jan/Projects/actor-analyse-domains/node_modules/apify/build/puppeteer_crawler.js:322:48)\n    at <anonymous>\n    at process._tickCallback (internal/process/next_tick.js:189:7)"
+  "errorMessage": "Error: net::ERR_NAME_NOT_RESOLVED at http://non-existent-domain.net\n    at navigate (/Users/jan/Projects/actor-analyze-domains/node_modules/puppeteer/lib/FrameManager.js:103:37)\n    at <anonymous>\n    at process._tickCallback (internal/process/next_tick.js:189:7)\n  -- ASYNC --\n    at Frame.<anonymous> (/Users/jan/Projects/actor-analyse-domains/node_modules/puppeteer/lib/helper.js:144:27)\n    at Page.goto (/Users/jan/Projects/actor-analyse-domains/node_modules/puppeteer/lib/Page.js:587:49)\n    at Page.<anonymous> (/Users/jan/Projects/actor-analyse-domains/node_modules/puppeteer/lib/helper.js:145:23)\n    at PuppeteerCrawler.gotoFunction (/Users/jan/Projects/actor-analyse-domains/node_modules/apify/build/puppeteer_crawler.js:30:53)\n    at PuppeteerCrawler._handleRequestFunction (/Users/jan/Projects/actor-analyse-domains/node_modules/apify/build/puppeteer_crawler.js:322:48)\n    at <anonymous>\n    at process._tickCallback (internal/process/next_tick.js:189:7)"
 }
 ```
